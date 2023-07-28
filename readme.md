@@ -2,6 +2,8 @@
 
 ## Overview
 
+![Alt design](design.png)
+
 This project implements a Data Collection System enabling organizations to register, create forms, collect data, and validate the form answers. The system also includes features to store data in a database and send success responses to users through SMS.
 
 The system is designed as a set of microservices, each responsible for a specific functionality. These services are:
