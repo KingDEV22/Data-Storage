@@ -1,8 +1,7 @@
 # Service Description: Data Collection System
 
 ## Overview
-
-![Alt design](design.png)
+![design](https://github.com/KingDEV22/Data-Storage/assets/98249720/a3f20a98-1fd1-4472-93ea-2db96f117b25)
 
 This project implements a Data Collection System enabling organizations to register, create forms, collect data, and validate the form answers. The system also includes features to store data in a database and send success responses to users through SMS.
 
