@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Add Line 4 -->
+<style>
+body {
+font-family: Arial, sans-serif;
+text-align: center;
+}
+
+form {
+margin: 20px auto;
+width: 300px;
+padding: 20px;
+border: 1px solid #ccc;
+border-radius: 5px;
+}
+</style>
+</head>
+<body>
+<!-- Add Line 21 -->
+<button type="submit">Submit</button>
+</form>
+<script>
+// Add Line 23
+{
+event.preventDefault();
+
+const formData = new FormData(event.target);
+const requestBody = {};
+
+formData.forEach((value, key) => {
+requestBody[key] = value;
+});
+
+const questions = document.getElementsByTagName("label");
+for (let i = 0; i < questions.length; i++) {
+const questionLabel = questions[i].innerText;
+const questionInput = document.getElementById(
+questions[i].getAttribute("for")
+);
+const questionType = questionInput.type;
+
+requestBody[`question${i + 1}_label`] = questionLabel;
+requestBody[`question${i + 1}_type`] = questionType;
+}
+// Add more questions to requestBody if needed
+console.log(requestBody);
+sendDataToAPI(requestBody);
+});
+
+function sendDataToAPI(data) {
+const apiUrl = "https://example.com/api/endpoint"; // Replace with your API endpoint URL
+
+fetch(apiUrl, {
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+},
+body: JSON.stringify(data),
+})
+.then((response) => {
+if (response.ok) {
+console.log("Data sent successfully!");
+} else {
+console.error("Failed to send data.");
+}
+})
+.catch((error) => {
+console.error("An error occurred:", error);
+});
+}
+</script>
+</body>
+</html>

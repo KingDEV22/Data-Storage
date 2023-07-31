@@ -29,10 +29,10 @@ public class AppUserDetails implements UserDetails {
     private Boolean enabled;
 
     public static AppUserDetails build(OrgUser user) {
-        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(user.getRoles().toString());
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("admin");
 
         return new AppUserDetails(
-                user.getUserId(),
+                user.getId(),
                 user.getEmail(),
                 user.getPassword(),
                 Arrays.asList(authority),

@@ -1,26 +1,24 @@
 package com.data.organization.service;
 
-import java.util.HashSet;
 import java.util.Locale;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.data.organization.dto.RegistrationRequest;
 import com.data.organization.model.OrgUser;
-import com.data.organization.model.Role;
-import com.data.organization.repository.OrgUserRepository;
+import com.data.organization.repository.OrgUserRepo;
 
 import lombok.AllArgsConstructor;
 
 @Service
 @AllArgsConstructor
 public class RegistrationService {
-    private final OrgUserRepository oRepository;
+    private final OrgUserRepo oRepository;
     private final PasswordEncoder encoder;
     private final MongoTemplate mongoTemplate;
 
@@ -47,7 +45,7 @@ public class RegistrationService {
         String code = getCountryCode(country);
         char firstLetter = name.charAt(0);
         char lastLetter = name.charAt(name.length() - 1);
-        return String.valueOf(firstLetter) + lastLetter + code + (mongoTemplate.count(null, OrgUser.class) + 1);
+        return String.valueOf(firstLetter) + lastLetter + code + (mongoTemplate.count(new Query(), OrgUser.class) + 1);
 
     }
 
@@ -58,8 +56,6 @@ public class RegistrationService {
         if (oRepository.existsByEmail(request.getEmail())) {
             throw new UsernameNotFoundException("User already exists. Please try with new one");
         }
-        Set<Role> roles = new HashSet<>();
-        roles.add(request.getAdmin() ? Role.ROLE_ADMIN : Role.ROLE_USER);
         OrgUser user = new OrgUser(
                 generateId(request.getName(), request.getCountry()),
                 request.getName(),
@@ -67,9 +63,10 @@ public class RegistrationService {
                 request.getEmail(),
                 request.getAddress(),
                 request.getCountry(),
-                roles,
+                request.getRoles(),
                 false,
                 true);
+        System.out.println(user.toString());
         oRepository.save(user);
     }
 

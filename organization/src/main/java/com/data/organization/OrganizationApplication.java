@@ -6,10 +6,10 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-import com.data.organization.repository.OrgUserRepository;
+import com.data.organization.repository.OrgUserRepo;
 
 @SpringBootApplication
-@EnableJpaRepositories(excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = OrgUserRepository.class))
+@EnableJpaRepositories(excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = OrgUserRepo.class))
 
 public class OrganizationApplication {
 

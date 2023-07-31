@@ -42,7 +42,6 @@ public class JwtTokenVerifier extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             String jwt = parseJwt(request);
-            System.out.println(jwt);
             if (jwt != null && jwtUtil.validateJwtToken(jwt, secretKey)) {
                 String username = jwtUtil.getUserNameFromJwtToken(jwt, secretKey);
 
