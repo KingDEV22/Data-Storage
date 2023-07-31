@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.data.organization.dto.FormRequest;
 import com.data.organization.dto.RegistrationRequest;
-import com.data.organization.service.FormHandlingService;
+import com.data.organization.service.FormService;
 import com.data.organization.service.RegistrationService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ public class OrgUserController {
     @Autowired
     private RegistrationService registrationService;
     @Autowired
-    private FormHandlingService formhandling;
+    private FormService formService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegistrationRequest request) {
@@ -40,7 +40,7 @@ public class OrgUserController {
     @PostMapping("/form")
     public ResponseEntity<?> getForm(@RequestBody FormRequest fRequest) {
         try {
-            return ResponseEntity.ok().body(formhandling.createform(fRequest));
+            return ResponseEntity.ok().body(formService.saveFormMetaData(fRequest));
         } catch (Exception e) {
             log.error(e.toString());
             return ResponseEntity.badRequest().body(e.getMessage());

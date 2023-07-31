@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class FormRequest {
-    private List<Question> questions;
+    private List<QuestionRequest> questions;
     private String formName;
     private String country;
 }

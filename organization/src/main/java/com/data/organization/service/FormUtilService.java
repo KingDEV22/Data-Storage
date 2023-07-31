@@ -8,27 +8,20 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.data.organization.dto.FormRequest;
-import com.data.organization.dto.Question;
-import com.data.organization.repository.OrgUserRepo;
+import com.data.organization.dto.QuestionRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class FormHandlingService {
+public class FormUtilService {
 
     private static final String inputFileName = "index.txt";
 
-    @Autowired
-    private OrgUserRepo oRepository;
-
-    public String generateHTMLFormTemplate(List<Question> questions, String formName, String country)
+    private String generateHTMLFormTemplate(List<QuestionRequest> questions, String formName, String country)
             throws IOException {
         StringBuilder htmlBuilder = new StringBuilder();
 
@@ -41,7 +34,7 @@ public class FormHandlingService {
                     break;
                 case "<!-- Add Line 21 -->":
                     htmlBuilder.append("<form id=\"").append(formName).append("\">\n");
-                    for (Question question : questions) {
+                    for (QuestionRequest question : questions) {
                         htmlBuilder.append("  <label for=\"").append(question.getName()).append("\">")
                                 .append(question.getLabel()).append("</label>\n");
                         if ("textarea".equals(question.getType())) {
@@ -83,19 +76,11 @@ public class FormHandlingService {
         return file.getAbsolutePath();
     }
 
-    private String getEmail(){
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    return authentication.getName();
-    }
-
     public String createform(FormRequest formRequest) throws IOException {
-        
-        System.out.println((oRepository.findByEmail(getEmail()).get()));
-        System.out.println("h");
         String formTemplate = generateHTMLFormTemplate(formRequest.getQuestions(), formRequest.getFormName(),
                 formRequest.getCountry());
-        String outputFileName = formRequest.getFormName() + ".html";
-        return saveHTMLToFile(formTemplate, outputFileName);
+        String formLink =  saveHTMLToFile(formTemplate, (formRequest.getFormName() + ".html"));
+        return formLink;
 
     }
 

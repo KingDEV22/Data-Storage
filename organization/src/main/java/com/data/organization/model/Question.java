@@ -5,19 +5,20 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Data;
 
-@Document
-@Data
-public class Question {
-        @Id
-        private String qId;
-        private String question;
-        private String type;
-        private String fId;
-        public Question(String question, String type, String f_id) {
-            this.question = question;
-            this.type = type;
-            this.fId = f_id;
-        }
 
-        
+@Data
+@Document(collation = "question")
+public class Question {
+    private String qname;
+    private String qlabel;
+    private String qtype;
+    private String fId;
+
+    public Question(String qname, String qlabel, String qtype, String fId) {
+        this.qname = qname;
+        this.qlabel = qlabel;
+        this.qtype = qtype;
+        this.fId = fId;
+    }
+
 }
