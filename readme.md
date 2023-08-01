@@ -1,8 +1,6 @@
 # Service Description: Data Collection System
 
 ## Overview
-![design](https://github.com/KingDEV22/Data-Storage/assets/98249720/78dbcdcb-7387-42b2-928c-9a4c4ece3b5e)
-
 This project implements a Data Collection System enabling organizations to register, create forms, collect data, and validate the form answers. The system also includes features to store data in a database and send success responses to users through SMS.
 
 The system is designed as a set of microservices, each responsible for a specific functionality. These services are:
@@ -14,5 +12,7 @@ The system is designed as a set of microservices, each responsible for a specifi
 3. **Database Service:** The Database Service is responsible for storing the collected data in the database. It ensures secure storage and retrieval of data submitted through the forms.
 
 4. **SMS/Email Service:** This is AWS Lambda service that handles sending success responses to users from whom data is collected.
+
+![design](https://github.com/KingDEV22/Data-Storage/assets/98249720/78dbcdcb-7387-42b2-928c-9a4c4ece3b5e)
 
    Still in development...
