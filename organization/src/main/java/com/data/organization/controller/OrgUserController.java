@@ -23,8 +23,7 @@ public class OrgUserController {
 
     @Autowired
     private RegistrationService registrationService;
-    @Autowired
-    private FormService formService;
+
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegistrationRequest request) {
@@ -33,16 +32,6 @@ public class OrgUserController {
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error(e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    @PostMapping("/form")
-    public ResponseEntity<?> getForm(@RequestBody FormRequest fRequest) {
-        try {
-            return ResponseEntity.ok().body(formService.saveFormMetaData(fRequest));
-        } catch (Exception e) {
-            log.error(e.toString());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

@@ -7,11 +7,22 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
+import javax.persistence.EntityNotFoundException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.data.organization.dto.FormRequest;
-import com.data.organization.dto.QuestionRequest;
+import com.data.organization.dto.QuestionResponse;
+import com.data.organization.model.Form;
+import com.data.organization.model.OrgUser;
+import com.data.organization.repository.FormRepo;
+import com.data.organization.repository.OrgUserRepo;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,9 +30,36 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class FormUtilService {
 
+    @Autowired
+    private OrgUserRepo oRepository;
+
+    @Autowired
+    private FormRepo fRepo;
+
     private static final String inputFileName = "index.txt";
 
-    private String generateHTMLFormTemplate(List<QuestionRequest> questions, String formName, String country)
+    public String getEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName();
+    }
+
+    public Form getFormMetaData(String name) {
+        Optional<Form> formByName = fRepo.findByName(name);
+        if (formByName.isEmpty()) {
+            throw new EntityNotFoundException("Form not found!!!");
+        }
+        return formByName.get();
+    }
+
+    public OrgUser getOrgUser() {
+        Optional<OrgUser> user = oRepository.findByEmail(getEmail());
+        if (user.isEmpty()) {
+            throw new UsernameNotFoundException("No user found!!");
+        }
+        return user.get();
+    }
+
+    private String generateHTMLFormTemplate(List<QuestionResponse> questions, String formName, String country)
             throws IOException {
         StringBuilder htmlBuilder = new StringBuilder();
 
@@ -29,12 +67,12 @@ public class FormUtilService {
         String line;
         while ((line = br.readLine()) != null) {
             switch (line) {
-                case "<!-- Add Line 4 -->":
+                case "<!-- Add title -->":
                     htmlBuilder.append("<title>").append(formName).append("</title>");
                     break;
-                case "<!-- Add Line 21 -->":
+                case "<!-- Add form body -->":
                     htmlBuilder.append("<form id=\"").append(formName).append("\">\n");
-                    for (QuestionRequest question : questions) {
+                    for (QuestionResponse question : questions) {
                         htmlBuilder.append("  <label for=\"").append(question.getName()).append("\">")
                                 .append(question.getLabel()).append("</label>\n");
                         if ("textarea".equals(question.getType())) {
@@ -48,7 +86,7 @@ public class FormUtilService {
                         }
                     }
                     break;
-                case "// Add Line 23":
+                case "// Add script id":
                     htmlBuilder.append("document.getElementById(\"").append(formName)
                             .append("\").addEventListener(\"submit\", function (event) \n");
                     break;
@@ -79,7 +117,7 @@ public class FormUtilService {
     public String createform(FormRequest formRequest) throws IOException {
         String formTemplate = generateHTMLFormTemplate(formRequest.getQuestions(), formRequest.getFormName(),
                 formRequest.getCountry());
-        String formLink =  saveHTMLToFile(formTemplate, (formRequest.getFormName() + ".html"));
+        String formLink = saveHTMLToFile(formTemplate, (formRequest.getFormName() + ".html"));
         return formLink;
 
     }

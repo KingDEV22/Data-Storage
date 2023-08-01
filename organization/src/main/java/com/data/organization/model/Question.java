@@ -6,7 +6,7 @@ import lombok.Data;
 
 
 @Data
-@Document(collation = "question")
+@Document
 public class Question {
     private String qname;
     private String qlabel;
