@@ -3,15 +3,13 @@ package com.data.database.dto;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
-@Getter
-@Setter
+@AllArgsConstructor
 public class FormDataRequest {
     private List<QuestionAnswerRequest> qa;
-    private String formName;
+    private String url;
 }

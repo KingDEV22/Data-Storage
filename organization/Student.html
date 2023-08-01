@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Student</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+      }
+
+      form {
+        margin: 20px auto;
+        width: 300px;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <form id="Student">
+      <label for="name">Enter your name</label>
+      <input type="text" id="name" name="name" /><br /><br />
+      <label for="role">Enter your roll number</label>
+      <input type="number" id="role" name="role" /><br /><br />
+      <label for="age">Enter your age</label>
+      <input type="number" id="age" name="age" /><br /><br />
+      <label for="country">Enter your country</label>
+      <input type="text" id="country" name="country" /><br /><br />
+      <button type="submit">Submit</button>
+    </form>
+    <script>
+      document
+        .getElementById("Student")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          const formData = new FormData(event.target);
+          const questionBody = [];
+          formData.forEach((value, key) => {
+            questionBody.push({
+              name: key,
+              value: value,
+            });
+          });
+
+          const questions = document.getElementsByTagName("label");
+          for (let i = 0; i < questions.length; i++) {
+            const questionLabel = questions[i].innerText;
+            const questionInput = document.getElementById(
+              questions[i].getAttribute("for")
+            );
+            const questionType = questionInput.type;
+
+            questionBody[i]["label"] = questionLabel;
+            questionBody[i]["type"] = questionType;
+          }
+
+          const requestBody = {
+            qa: questionBody,
+            url: window.location.href,
+          };
+          // Add more questions to requestBody if needed
+          console.log(requestBody);
+          sendDataToAPI(requestBody);
+        });
+
+      function sendDataToAPI(data) {
+        const apiUrl = "http://127.0.0.1:5000/validate"; // Replace with your API endpoint URL
+
+        fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        })
+          .then((response) => {
+            if (response.ok) {
+              console.log("Data sent successfully!");
+            } else {
+              console.error("Failed to send data.");
+            }
+          })
+          .catch((error) => {
+            console.error("An error occurred:", error);
+          });
+      }
+    </script>
+  </body>
+</html>

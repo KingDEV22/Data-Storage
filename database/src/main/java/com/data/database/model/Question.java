@@ -1,27 +1,23 @@
 package com.data.database.model;
 
-import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIndexHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+import lombok.Data;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@DynamoDBTable(tableName = "question")
+@Data
+@Document
 public class Question {
-    @Id
-    private String q_id;
+    private String qname;
+    private String qlabel;
+    private String qtype;
+    private String fId;
 
-    private String question;
-
-    private String type;
-    private String f_id;
+    public Question(String qname, String qlabel, String qtype, String fId) {
+        this.qname = qname;
+        this.qlabel = qlabel;
+        this.qtype = qtype;
+        this.fId = fId;
+    }
 
 }

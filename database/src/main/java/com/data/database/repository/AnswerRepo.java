@@ -1,10 +1,10 @@
 package com.data.database.repository;
 
-import org.socialsignin.spring.data.dynamodb.repository.DynamoDBCrudRepository;
-import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
 
 import com.data.database.model.Answer;
 
-@EnableScan
-public interface AnswerRepo extends DynamoDBCrudRepository<Answer, String> {
+@Repository
+public interface AnswerRepo extends MongoRepository<Answer, String> {
 }

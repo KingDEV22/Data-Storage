@@ -1,16 +1,15 @@
 package com.data.database.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
-@Getter
-@Setter
+@NoArgsConstructor
 public class QuestionAnswerRequest {
-
-    private String question;
-    private String answer;
+    private String name;
+    private String value;
+    private String label; 
+    private String type;
 }

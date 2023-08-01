@@ -27,10 +27,12 @@ border-radius: 5px;
 event.preventDefault();
 
 const formData = new FormData(event.target);
-const requestBody = {};
-
+const questionBody = [];
 formData.forEach((value, key) => {
-requestBody[key] = value;
+questionBody.push({
+name: key,
+value: value
+});
 });
 
 const questions = document.getElementsByTagName("label");
@@ -41,16 +43,21 @@ questions[i].getAttribute("for")
 );
 const questionType = questionInput.type;
 
-requestBody[`question${i + 1}_label`] = questionLabel;
-requestBody[`question${i + 1}_type`] = questionType;
+questionBody[i]['label'] = questionLabel;
+questionBody[i]['type'] = questionType;
 }
+
+const requestBody = {
+"qa": questionBody,
+"url": window.location.href
+};
 // Add more questions to requestBody if needed
 console.log(requestBody);
 sendDataToAPI(requestBody);
 });
 
 function sendDataToAPI(data) {
-const apiUrl = "https://example.com/api/endpoint"; // Replace with your API endpoint URL
+const apiUrl = "http://127.0.0.1:5000/validate"; // Replace with your API endpoint URL
 
 fetch(apiUrl, {
 method: "POST",
