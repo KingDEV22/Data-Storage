@@ -4,11 +4,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.data.organization.dto.QuestionResponse;
-import com.data.organization.model.Form;
-import com.data.organization.model.OrgUser;
 import com.data.organization.model.Question;
 import com.data.organization.repository.QuestionRepo;
 
@@ -21,9 +20,6 @@ public class QuestionService {
     @Autowired
     private QuestionRepo qRepo;
 
-    @Autowired
-    private FormUtilService fUtilService;
-
     public void saveQuestion(List<QuestionResponse> questions, String fId) {
         List<Question> questionData = questions.stream()
                 .map(question -> new Question(question.getName(), question.getLabel(), question.getType(), fId))
@@ -33,9 +29,10 @@ public class QuestionService {
         log.info("questions saved");
     }
 
-    public List<QuestionResponse> getQuestionByForm(String name) {
-        Form fdata = fUtilService.getFormMetaData(name);
-        List<Question> questions = qRepo.findAllByfId(fdata.getFId());
+
+    @Cacheable(value = "questions" , key = "#fId")
+    public List<QuestionResponse> getQuestionByForm(String fId) {
+        List<Question> questions = qRepo.findAllByfId(fId);
         return questions.stream()
                 .map(question -> new QuestionResponse(question.getQname(), question.getQtype(), question.getQlabel()))
                 .collect(Collectors.toList());

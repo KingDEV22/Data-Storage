@@ -1,4 +1,6 @@
-FROM amazoncorretto:17-alpine3.16-jdk
-WORKDIR /app
-COPY target/organization-0.0.1-SNAPSHOT.jar /app/organization.jar
+FROM openjdk:17-alpine
+WORKDIR /org-app
+COPY target/organization-0.0.1-SNAPSHOT.jar /org-app/organization.jar
+COPY html /org-app/html
 ENTRYPOINT ["java", "-jar", "organization.jar"]
+EXPOSE 8080

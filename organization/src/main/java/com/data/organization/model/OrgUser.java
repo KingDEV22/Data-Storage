@@ -7,21 +7,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
-@AllArgsConstructor
-@ToString
 @Document(collection = "org_user")
 public class OrgUser {
     @Id
-    private String id;
     private String orgId;
     private String name;
     @JsonIgnore
@@ -35,9 +28,8 @@ public class OrgUser {
     private Boolean locked;
     @JsonIgnore
     private Boolean enabled;
-    public OrgUser(String orgId, String name, String password, String email, String address, String country,
+    public OrgUser(String name, String password, String email, String address, String country,
             Set<Role> roles, Boolean locked, Boolean enabled) {
-        this.orgId = orgId;
         this.name = name;
         this.password = password;
         this.email = email;

@@ -32,7 +32,7 @@ public class AppUserDetails implements UserDetails {
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("admin");
 
         return new AppUserDetails(
-                user.getId(),
+                user.getOrgId(),
                 user.getEmail(),
                 user.getPassword(),
                 Arrays.asList(authority),

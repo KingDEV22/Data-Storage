@@ -7,13 +7,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -36,73 +35,63 @@ public class FormUtilService {
     @Autowired
     private FormRepo fRepo;
 
-    private static final String inputFileName = "index.txt";
+    private final String inputFileName = "html" + File.separator + "base" + File.separator + "index.txt";
+    private final String formsaveName = "html" + File.separator + "forms";
 
-    public String getEmail() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getName();
-    }
-
+    @Cacheable(cacheNames = "form", key = "#name")
     public Form getFormMetaData(String name) {
-        Optional<Form> formByName = fRepo.findByName(name);
-        if (formByName.isEmpty()) {
-            throw new EntityNotFoundException("Form not found!!!");
-        }
-        return formByName.get();
+        return fRepo.findByName(name)
+                .orElseThrow(() -> new EntityNotFoundException("Form not found!!!"));
     }
 
-    public OrgUser getOrgUser() {
-        Optional<OrgUser> user = oRepository.findByEmail(getEmail());
-        if (user.isEmpty()) {
-            throw new UsernameNotFoundException("No user found!!");
-        }
-        return user.get();
+    @Cacheable(value = "users", key = "#email")
+    public OrgUser getOrgUser(String email) {
+        return oRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("No user found!!"));
     }
 
     private String generateHTMLFormTemplate(List<QuestionResponse> questions, String formName, String country)
             throws IOException {
-        StringBuilder htmlBuilder = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+            StringBuilder htmlBuilder = new StringBuilder(br.lines().collect(Collectors.joining("\n")));
 
-        BufferedReader br = new BufferedReader(new FileReader(inputFileName));
-        String line;
-        while ((line = br.readLine()) != null) {
-            switch (line) {
-                case "<!-- Add title -->":
-                    htmlBuilder.append("<title>").append(formName).append("</title>");
-                    break;
-                case "<!-- Add form body -->":
-                    htmlBuilder.append("<form id=\"").append(formName).append("\">\n");
-                    for (QuestionResponse question : questions) {
-                        htmlBuilder.append("  <label for=\"").append(question.getName()).append("\">")
-                                .append(question.getLabel()).append("</label>\n");
-                        if ("textarea".equals(question.getType())) {
-                            htmlBuilder.append("  <textarea id=\"").append(question.getName())
-                                    .append("\" name=\"").append(question.getName())
-                                    .append("\" rows=\"4\" cols=\"50\"></textarea><br><br>\n");
-                        } else {
-                            htmlBuilder.append("  <input type=\"").append(question.getType()).append("\" id=\"")
-                                    .append(question.getName()).append("\" name=\"").append(question.getName())
-                                    .append("\"><br><br>\n");
-                        }
-                    }
-                    break;
-                case "// Add script id":
-                    htmlBuilder.append("document.getElementById(\"").append(formName)
-                            .append("\").addEventListener(\"submit\", function (event) \n");
-                    break;
-                default:
-                    htmlBuilder.append(line + "\n");
+            String formHeader = String.format("<title>%s</title>\n", formName);
+            StringBuilder formFields = new StringBuilder(String.format("<form id=\"%s\">\n", formName));
+
+            for (QuestionResponse question : questions) {
+                String inputTag;
+                if ("textarea".equals(question.getType())) {
+                    inputTag = String.format(
+                            "  <textarea id=\"%s\" name=\"%s\" rows=\"4\" cols=\"50\"></textarea><br><br>\n",
+                            question.getName(), question.getName());
+                } else {
+                    inputTag = String.format("  <input type=\"%s\" id=\"%s\" name=\"%s\"><br><br>\n",
+                            question.getType(), question.getName(), question.getName());
+                }
+                formFields.append(
+                        String.format("  <label for=\"%s\">%s</label>\n", question.getName(), question.getLabel()));
+                formFields.append(inputTag);
             }
-        }
-        br.close();
-        log.info("html templated created");
 
-        return htmlBuilder.toString();
+            String scriptTag = String.format(
+                    "document.getElementById(\"%s\").addEventListener(\"submit\", function (event) \n", formName);
+
+            htmlBuilder = htmlBuilder.replace(htmlBuilder.indexOf("<!-- Add title -->"),
+                    htmlBuilder.indexOf("<!-- Add title -->") + "<!-- Add title -->".length(), formHeader);
+            htmlBuilder = htmlBuilder.replace(htmlBuilder.indexOf("<!-- Add form body -->"),
+                    htmlBuilder.indexOf("<!-- Add form body -->") + "<!-- Add form body -->".length(),
+                    formFields.toString());
+            htmlBuilder = htmlBuilder.replace(htmlBuilder.indexOf("// Add script id"),
+                    htmlBuilder.indexOf("// Add script id") + "// Add script id".length(), scriptTag);
+
+            log.info("HTML template created");
+
+            return htmlBuilder.toString();
+        }
     }
 
     private String saveHTMLToFile(String htmlContent, String fileName) throws IOException {
-
-        File file = new File(fileName);
+        File file = new File(formsaveName, fileName);
         if (file.exists()) {
             file.delete();
         }

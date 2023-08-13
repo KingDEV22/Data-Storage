@@ -8,20 +8,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.data.organization.model.AppUserDetails;
 import com.data.organization.model.OrgUser;
-import com.data.organization.repository.OrgUserRepo;
 
 @Service
 public class OrgUserServiceImpl implements UserDetailsService {
 
     @Autowired
-    private OrgUserRepo orgUserRepository;
+    private FormUtilService fService;
 
     @Override
     @Transactional
-    public AppUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        OrgUser user = orgUserRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
-
+    public AppUserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        OrgUser user = fService.getOrgUser(email);
         return AppUserDetails.build(user);
     }
 
