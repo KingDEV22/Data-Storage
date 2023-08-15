@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>test</title>
-
+<!-- Add title -->
 <style>
 body {
 font-family: Arial, sans-serif;
@@ -44,21 +43,11 @@ cursor: pointer;
 </style>
 </head>
 <body>
-<form id="test">
-  <label for="fullname">Enter your full name</label>
-  <input type="text" id="fullname" name="fullname"><br><br>
-  <label for="info">Enter your info number</label>
-  <input type="number" id="info" name="info"><br><br>
-  <label for="rest">Enter your address</label>
-  <input type="text" id="rest" name="rest"><br><br>
-  <label for="house">Enter your country</label>
-  <input type="text" id="house" name="house"><br><br>
-
+<!-- Add form body -->
 <button type="submit">Submit</button>
 </form>
 <script>
-document.getElementById("test").addEventListener("submit", function (event) 
-
+// Add script id
 {
 event.preventDefault();
 
@@ -93,7 +82,7 @@ sendDataToAPI(requestBody);
 });
 
 function sendDataToAPI(data) {
-const apiUrl = "http://127.0.0.1:5000/validate"; // Replace with your API endpoint URL
+const apiUrl = "http://localhost:4000/validate"; // Replace with your API endpoint URL
 
 fetch(apiUrl, {
 method: "POST",

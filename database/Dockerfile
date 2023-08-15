@@ -1,4 +1,5 @@
-FROM amazoncorretto:17-alpine3.16-jdk
-WORKDIR /app
-COPY target/database-0.0.1-SNAPSHOT.jar /app/database.jar
+FROM openjdk:17-alpine
+WORKDIR /db-app
+COPY target/database-0.0.1-SNAPSHOT.jar /db/database.jar
 ENTRYPOINT ["java", "-jar", "database.jar"]
+EXPOSE 8081

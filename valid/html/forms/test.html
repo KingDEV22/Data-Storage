@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Student</title>
+    <title>test</title>
+
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -41,23 +42,23 @@
         cursor: pointer;
       }
     </style>
-
   </head>
   <body>
-    <form id="Student">
-      <label for="name">Enter your name</label>
-      <input type="text" id="name" name="name" /><br /><br />
-      <label for="role">Enter your roll number</label>
-      <input type="number" id="role" name="role" /><br /><br />
-      <label for="age">Enter your age</label>
-      <input type="number" id="age" name="age" /><br /><br />
-      <label for="country">Enter your country</label>
-      <input type="text" id="country" name="country" /><br /><br />
+    <form id="test">
+      <label for="fullname">Enter your full name</label>
+      <input type="text" id="fullname" name="fullname" /><br /><br />
+      <label for="info">Enter your info number</label>
+      <input type="number" id="info" name="info" /><br /><br />
+      <label for="rest">Enter your address</label>
+      <input type="text" id="rest" name="rest" /><br /><br />
+      <label for="house">Enter your country</label>
+      <input type="text" id="house" name="house" /><br /><br />
+
       <button type="submit">Submit</button>
     </form>
     <script>
       document
-        .getElementById("Student")
+        .getElementById("test")
         .addEventListener("submit", function (event) {
           event.preventDefault();
 
@@ -92,7 +93,7 @@
         });
 
       function sendDataToAPI(data) {
-        const apiUrl = "http://0.0.0.0:4000/validate"; // Replace with your API endpoint URL
+        const apiUrl = "http://127.0.0.1:5000/validate"; // Replace with your API endpoint URL
 
         fetch(apiUrl, {
           method: "POST",

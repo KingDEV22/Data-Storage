@@ -14,5 +14,7 @@ public interface FormRepo extends MongoRepository<Form, String> {
 
     Optional<Form> findByName(String name);
 
+    Optional<Form> findByLink(String link);
+
     boolean existsByName(String name);
 }

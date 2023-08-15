@@ -22,11 +22,11 @@ public class FormDataController {
     @Autowired
     private FormDataService fService;
 
-    @PostMapping("/form/data/save")
+    @PostMapping("/form/save")
     public ResponseEntity<?> storeformDetails(@RequestBody FormDataRequest fDataRequest) {
         try {
             System.out.println(fDataRequest.toString());
-            fService.saveFormData(fDataRequest);
+            // fService.saveFormData(fDataRequest);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error(e.getMessage());

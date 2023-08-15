@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.data.organization.dto.FormRequest;
 import com.data.organization.model.Form;
+import com.data.organization.model.OrgUser;
 import com.data.organization.service.FormService;
 import com.data.organization.service.FormUtilService;
 import com.data.organization.service.QuestionService;
@@ -30,17 +31,21 @@ public class FormController {
     @Autowired
     private QuestionService qService;
     @Autowired
-     private FormUtilService fUtilService;
+    private FormUtilService fUtilService;
+
+    private OrgUser orgUser;
 
     private String getOrgId() {
-       String email = SecurityContextHolder.getContext().getAuthentication().getName();
-       return fUtilService.getOrgUser(email).getOrgId();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        orgUser = fUtilService.getOrgUser(email);
+        return orgUser.getOrgId();
     }
 
     @PostMapping("/form")
-    public ResponseEntity<?> getForm(@RequestBody FormRequest fRequest) {
+    public ResponseEntity<?> getFormLink(@RequestBody FormRequest fRequest) {
         try {
-            return ResponseEntity.ok().body(formService.saveFormMetaData(fRequest,getOrgId()));
+            getOrgId();
+            return ResponseEntity.ok().body(formService.saveFormMetaData(fRequest, orgUser));
         } catch (Exception e) {
             log.error(e.toString());
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -57,7 +62,7 @@ public class FormController {
         }
     }
 
-    @GetMapping("/form/name")
+    @GetMapping("/form")
     public ResponseEntity<?> getFormByName(@RequestHeader("name") String name) {
         try {
             return ResponseEntity.ok().body(formService.getFormByName(name));
