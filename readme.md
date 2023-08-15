@@ -9,10 +9,7 @@ The system is designed as a set of microservices, each responsible for a specifi
 
 2. **Validator Service:** The Validator Service is implemented as a simple AWS Lambda service. Its purpose is to validate text in the form answers based on predefined constraints. This service ensures that the data submitted by users is error free.
 
-3. **Database Service:** The Database Service is responsible for storing the collected data in the database. It ensures secure storage and retrieval of data submitted through the forms.
-
 4. **SMS/Email Service:** This is AWS Lambda service that handles sending success responses to users from whom data is collected.
 
-![design](https://github.com/KingDEV22/Data-Storage/assets/98249720/78dbcdcb-7387-42b2-928c-9a4c4ece3b5e)
 
    Still in development...
