@@ -5,9 +5,9 @@ This project implements a Data Collection System enabling organizations to regis
 
 The system is designed as a set of microservices, each responsible for a specific functionality. These services are:
 
-1. **Organization Service:** This service allows new organizations to register and use the system for data collection. Organizations can create forms that will be used to collect data from users.
+1. **Organization Service:** This service allows new organizations to register and use the service to create form for data collection.
 
-2. **Validator Service:** The Validator Service is a server to validate text in the form answers based on predefined constraints. This service ensures that the data submitted by users is error free and send the data to store it in database.
+2. **Validator Service:** The Validator Service is a server to host form and validate data in the form answers based on predefined constraints. It then send the data to message queue to save it in the database.
 
 4. **SMS/Email Service:** This service handles sending success responses to users from whom data is collected.
 
