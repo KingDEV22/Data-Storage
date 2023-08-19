@@ -220,7 +220,7 @@ app.post("/validate", (req, res) => __awaiter(void 0, void 0, void 0, function* 
             qa: answerData,
             url: url,
         };
-        const connection = yield amqplib_1.default.connect("amqp://user:user@localhost:5672");
+        const connection = yield amqplib_1.default.connect("amqp://user:user@rabbitmq:5672");
         const channel = yield connection.createChannel();
         // Makes the queue available to the client
         yield channel.assertQueue("org_db_data");

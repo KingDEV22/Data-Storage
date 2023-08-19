@@ -12,9 +12,13 @@ public interface FormRepo extends MongoRepository<Form, String> {
     @Query("{'orgId': ?0}")
     List<Form> findAllByorgId(String orgId);
 
-    Optional<Form> findByName(String name);
+    @Query("{'name' : ?0, 'orgId' : ?1}")
+    Optional<Form> findByNameAndOrgId(String name, String orgId);
 
     Optional<Form> findByLink(String link);
 
     boolean existsByName(String name);
+
+    @Query("{'name' : ?0, 'orgId' : ?1}")
+    void deleteByNameAndOrgId(String formName, String orgId);
 }

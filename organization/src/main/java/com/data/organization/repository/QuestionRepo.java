@@ -7,8 +7,13 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import com.data.organization.model.Question;
 
-
 public interface QuestionRepo extends MongoRepository<Question, String> {
-    @Query("{'fId': ?0}")
-    List<Question> findAllByfId(String fId);
+    @Query("{'fid': ?0}")
+    List<Question> findAllByFid(String fid);
+
+    @Query("{'qid' : ?0 , 'fid' : ?1}")
+    Question findByQidAndFid(String qid, String fid);
+    @Query("{'fid': ?0}")
+    void deleteAllByFid(String fid);
+
 }

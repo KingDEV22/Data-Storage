@@ -6,8 +6,9 @@
     "rootDir": "./",                             
     "strict": true,
     "moduleResolution": "node",
-    "esModuleInterop": true,                       
+    "esModuleInterop": true,                      
   },
+  "types": ["node", "@types/mongoose"], 
   "exclude":[
     "./node_modules"
   ]

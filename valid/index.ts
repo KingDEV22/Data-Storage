@@ -5,7 +5,7 @@ import client, { Channel, Connection } from "amqplib";
 import Joi from "joi";
 import axios from "axios";
 const app: Application = express();
-const url = "mongodb://0.0.0.0:27017/org";
+const url = "mongodb://localhost:27017/org";
 const PORT = process.env.PORT || 4000;
 app.use(express.json());
 const generateForm = (title?: string, body?: any): String => {
@@ -176,7 +176,7 @@ mongoose
   .then(() => {
     console.log("connected to database!!");
   })
-  .catch((error) => {
+  .catch((error: any) => {
     console.log(error);
   });
 
@@ -187,11 +187,11 @@ app.get("/", (req: Request, res: Response) => {
 app.get("/form", async (req: Request, res: Response) => {
   const url = `http://localhost:${PORT}` + req.url.replace("/?", "?");
   console.log(url);
-  let data = await Form.findOne({ link: url }).catch((error) => {
+  let data = await Form.findOne({ link: url }).catch((error: any) => {
     console.log(error);
     res.send(error);
   });
-  let question = await Question.find({ fId: data?.id }).catch((error) => {
+  let question = await Question.find({ fId: data?.id }).catch((error: any) => {
     console.log(error);
     res.send(error);
   });
@@ -218,7 +218,7 @@ app.post("/validate", async (req: Request, res: Response) => {
     }
 
     const connection: Connection = await client.connect(
-      "amqp://user:user@localhost:5672"
+      "amqp://user:user@rabbitmq:5672"
     );
 
     const channel: Channel = await connection.createChannel();

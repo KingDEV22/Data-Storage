@@ -1,22 +1,23 @@
 package com.data.organization.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.data.organization.dto.FormDataUpdateDTO;
+import com.data.organization.dto.FormDeleteDTO;
 import com.data.organization.dto.FormRequest;
-import com.data.organization.model.Form;
-import com.data.organization.model.OrgUser;
 import com.data.organization.service.FormService;
-import com.data.organization.service.FormUtilService;
-import com.data.organization.service.QuestionService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,26 +29,13 @@ public class FormController {
 
     @Autowired
     private FormService formService;
-    @Autowired
-    private QuestionService qService;
-    @Autowired
-    private FormUtilService fUtilService;
-
-    private OrgUser orgUser;
-
-    private String getOrgId() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        orgUser = fUtilService.getOrgUser(email);
-        return orgUser.getOrgId();
-    }
 
     @PostMapping("/form")
     public ResponseEntity<?> getFormLink(@RequestBody FormRequest fRequest) {
         try {
-            getOrgId();
-            return ResponseEntity.ok().body(formService.saveFormMetaData(fRequest, orgUser));
+            return ResponseEntity.ok().body(formService.saveFormMetaData(fRequest));
         } catch (Exception e) {
-            log.error(e.toString());
+            log.error("error", e);
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -55,9 +43,9 @@ public class FormController {
     @GetMapping("/form/all")
     public ResponseEntity<?> getFormByOrg() {
         try {
-            return ResponseEntity.ok().body(formService.getAllFormByOrg(getOrgId()));
+            return ResponseEntity.ok().body(formService.getAllFormByOrg());
         } catch (Exception e) {
-            log.error(e.toString());
+            log.error("error", e);
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -67,7 +55,51 @@ public class FormController {
         try {
             return ResponseEntity.ok().body(formService.getFormByName(name));
         } catch (Exception e) {
-            log.error(e.toString());
+            log.error("error", e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/form/name")
+    public ResponseEntity<?> updateFormName(@RequestBody FormDataUpdateDTO formRequest) {
+        try {
+            formService.updateFormName(formRequest.getFormName(), formRequest.getOldName());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("error", e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/form/name")
+    public ResponseEntity<?> deleteForm(@RequestBody FormDeleteDTO formRequest) {
+        try {
+            formService.deleteForm(formRequest.getFormName());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("error", e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/form/question")
+    public ResponseEntity<?> updateFormQuestions(@RequestBody FormDataUpdateDTO formRequest) {
+        try {
+            formService.updateFormQuestions(formRequest.getQuestions(), formRequest.getFormName());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("error", e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/form/question")
+    public ResponseEntity<?> deteleFormQuestions(@RequestBody FormDeleteDTO formRequest) {
+        try {
+            formService.deteleFormQuestions(formRequest.getQuestionIds());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("error", e);
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -75,11 +107,11 @@ public class FormController {
     @GetMapping("/form/question")
     public ResponseEntity<?> getQuestionByForm(@RequestHeader("name") String name) {
         try {
-            Form fdata = fUtilService.getFormMetaData(name);
-            return ResponseEntity.ok().body(qService.getQuestionByForm(fdata.getFId()));
+            return ResponseEntity.ok().body(formService.getFormQuestions(name));
         } catch (Exception e) {
-            log.error(e.toString());
+            log.error("error", e);
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
 }

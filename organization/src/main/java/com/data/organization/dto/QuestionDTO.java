@@ -4,13 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
-@Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class QuestionAnswerRequest {
+@AllArgsConstructor
+@Data
+public class QuestionDTO {
+    private String qid;
     private String qname;
-    private String qvalue;
-    private String qlabel; 
     private String qtype;
+    private String qlabel;
 }

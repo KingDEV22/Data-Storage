@@ -9,6 +9,17 @@ services:
       - mongodb_data:/data/db
     networks:
       - app-network
+  rabbitmq:
+    image: rabbitmq:3.8-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+      - 5673:5672
+      - 15673:15672
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+      - app-network
 
   org-app:
     build:
@@ -31,21 +42,11 @@ services:
     container_name: valid-app
     depends_on:
       - rabbitmq
+      - mongodb
     ports:
-      - "4000:8000"
+      - "4000:4000"
     networks:
       - app-network
-  rabbitmq:
-    image: rabbitmq:3.8-management-alpine
-    container_name: 'rabbitmq'
-    ports:
-        - 5673:5672
-        - 15673:15672
-    volumes:
-        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
-    networks:
-        - app-network
 
 networks:
   app-network:
