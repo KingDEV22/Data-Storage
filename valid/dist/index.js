@@ -40,9 +40,17 @@ const mongoose_1 = __importStar(require("mongoose"));
 require("dotenv/config");
 const amqplib_1 = __importDefault(require("amqplib"));
 const joi_1 = __importDefault(require("joi"));
+const winston_1 = require("winston");
 const app = (0, express_1.default)();
 const url = "mongodb://0.0.0.0:27017/org";
 const PORT = process.env.PORT || 4000;
+//logger initialize
+const logger = (0, winston_1.createLogger)({
+    format: winston_1.format.combine(winston_1.format.timestamp(), winston_1.format.json()),
+    transports: [new winston_1.transports.Console({})],
+    exceptionHandlers: [new winston_1.transports.Console({})],
+    rejectionHandlers: [new winston_1.transports.Console({})],
+});
 app.use(express_1.default.json());
 const generateForm = (title, body) => {
     const head = `<!DOCTYPE html>
@@ -183,27 +191,35 @@ const answerSchema = joi_1.default.object({
 mongoose_1.default
     .connect(url)
     .then(() => {
-    console.log("connected to database!!");
+    logger.info("connected to database!!");
 })
     .catch((error) => {
-    console.log(error);
+    logger.error("", error);
 });
 app.get("/", (req, res) => {
     res.send("TS App is Running");
 });
 app.get("/form", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const url = `http://localhost:${PORT}` + req.url.replace("/?", "?");
-    console.log(url);
-    let data = yield Form.findOne({ link: url }).catch((error) => {
-        console.log(error);
-        res.send(error);
-    });
-    let question = yield Question.find({ fId: data === null || data === void 0 ? void 0 : data.id }).catch((error) => {
-        console.log(error);
-        res.send(error);
-    });
-    const formData = generateForm(data === null || data === void 0 ? void 0 : data.name, question);
-    res.send(formData);
+    try {
+        let data = yield Form.findOne({ link: url }).catch((error) => {
+            logger.error("", error);
+            res.send(error);
+        });
+        logger.info("URl Found!!!");
+        let question = yield Question.find({ fid: data === null || data === void 0 ? void 0 : data.id }).catch((error) => {
+            logger.error("", error);
+            res.send(error);
+        });
+        logger.info("Questions fetched...");
+        const formData = generateForm(data === null || data === void 0 ? void 0 : data.name, question);
+        logger.info("Data generated");
+        res.send(formData);
+    }
+    catch (error) {
+        logger.error("", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
 }));
 app.post("/validate", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -231,7 +247,7 @@ app.post("/validate", (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return res.send("Data sent successfully");
     }
     catch (error) {
-        console.log(error);
+        logger.error("", error);
         return res.status(500).json({ error: "Internal server error" });
     }
 }));

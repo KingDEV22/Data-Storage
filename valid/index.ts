@@ -3,11 +3,21 @@ import mongoose, { Schema } from "mongoose";
 import "dotenv/config";
 import client, { Channel, Connection } from "amqplib";
 import Joi from "joi";
-import axios from "axios";
+import { createLogger, format, transports } from "winston";
 const app: Application = express();
-const url = "mongodb://localhost:27017/org";
+const url = "mongodb://mongodb:27017/org";
 const PORT = process.env.PORT || 4000;
+
+//logger initialize
+const logger = createLogger({
+  format: format.combine(format.timestamp(), format.json()),
+  transports: [new transports.Console({})],
+  exceptionHandlers: [new transports.Console({})],
+  rejectionHandlers: [new transports.Console({})],
+});
+
 app.use(express.json());
+
 const generateForm = (title?: string, body?: any): String => {
   const head = `<!DOCTYPE html>
   <html>
@@ -132,7 +142,7 @@ const generateForm = (title?: string, body?: any): String => {
 };
 
 const Form = mongoose.model(
-  "form",
+  "MetaData",
   new Schema(
     {
       link: String,
@@ -140,7 +150,7 @@ const Form = mongoose.model(
       createDate: Date,
       orgId: String,
     },
-    { collection: "form" }
+    { collection: "MetaData" }
   )
 );
 
@@ -174,10 +184,10 @@ const answerSchema = Joi.object({
 mongoose
   .connect(url)
   .then(() => {
-    console.log("connected to database!!");
+    logger.info("connected to database!!");
   })
   .catch((error: any) => {
-    console.log(error);
+    logger.error("", error);
   });
 
 app.get("/", (req: Request, res: Response) => {
@@ -186,56 +196,61 @@ app.get("/", (req: Request, res: Response) => {
 
 app.get("/form", async (req: Request, res: Response) => {
   const url = `http://localhost:${PORT}` + req.url.replace("/?", "?");
-  console.log(url);
-  let data = await Form.findOne({ link: url }).catch((error: any) => {
-    console.log(error);
-    res.send(error);
-  });
-  let question = await Question.find({ fId: data?.id }).catch((error: any) => {
-    console.log(error);
-    res.send(error);
-  });
-  const formData = generateForm(data?.name, question);
-
-  res.send(formData);
+  try {
+    let data = await Form.findOne({ link: url }).catch((error: any) => {
+      logger.error("", error);
+      res.send(error);
+    });
+    logger.info("URl Found!!!");
+    let question = await Question.find({ fid: data?.id }).catch(
+      (error: any) => {
+        logger.error("", error);
+        res.send(error);
+      }
+    );
+    logger.info("Questions fetched...");
+    const formData = generateForm(data?.name, question);
+    logger.info("Data generated");
+    res.send(formData);
+  } catch (error) {
+    logger.error("", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 app.post("/validate", async (req: Request, res: Response) => {
   const answerData: answerData[] = req.body.qa;
   const url = (req.body.url as string)?.replace("/?", "?");
-
   try {
     for (const data of answerData) {
       const { error } = answerSchema.validate(data);
       if (error) {
+        logger.error("", error);
         return res.status(400).json({ error: error.details[0].message });
       }
     }
-
+    logger.info("Data validated!!!");
     const data = {
-      qa:answerData,
-      url:url,
-    }
-
+      qa: answerData,
+      url: url,
+    };
     const connection: Connection = await client.connect(
-      "amqp://user:user@rabbitmq:5672"
+      "amqp://guest:guest@rabbitmq:5672"
     );
-
+    logger.info("Connected to rabbitmq");
     const channel: Channel = await connection.createChannel();
     // Makes the queue available to the client
     await channel.assertQueue("org_db_data");
 
     //Send a message to the queue
-    await channel.sendToQueue(
-      "org_db_data",
-      Buffer.from(JSON.stringify(data))
-    );
+    await channel.sendToQueue("org_db_data", Buffer.from(JSON.stringify(data)));
+    
     await channel.close();
     await connection.close();
-
+    logger.info("Data sent to message queue");
     return res.send("Data sent successfully");
   } catch (error) {
-    console.log(error);
+    logger.error("", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
