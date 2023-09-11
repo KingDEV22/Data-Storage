@@ -10,9 +10,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.data.organization.exception.FormDataException;
-import com.data.organization.model.Form;
+import com.data.organization.model.MetaData;
 import com.data.organization.model.OrgUser;
-import com.data.organization.repository.FormRepo;
+import com.data.organization.repository.MetaDataRepo;
 import com.data.organization.repository.OrgUserRepo;
 
 import lombok.extern.slf4j.Slf4j;
@@ -25,10 +25,10 @@ public class FormUtilService {
     private OrgUserRepo oRepository;
 
     @Autowired
-    private FormRepo fRepo;
+    private MetaDataRepo fRepo;
 
-    @Cacheable(cacheNames = "form", key = "#name + '-' + #orgId")
-    public Form getFormMetaData(String name, String orgId) {    
+    @Cacheable(cacheNames = "metaData", key = "#name + '-' + #orgId")
+    public MetaData getMetaData(String name, String orgId) {    
         return fRepo.findByNameAndOrgId(name, orgId).orElse(null);
     }
 
@@ -38,22 +38,22 @@ public class FormUtilService {
                 .orElseThrow(() -> new UsernameNotFoundException("No user found!!"));
     }
 
-    @Cacheable(cacheNames = "form", key = "#link")
-    public Form getFormMetaDataByLink(String link) {
+    @Cacheable(cacheNames = "forms", key = "#link")
+    public MetaData getFormMetaDataByLink(String link) {
         return fRepo.findByLink(link).orElseThrow(() -> new EntityNotFoundException("Form not found!!!"));
     }
 
     public void checkForm(String name, String org){
-        Form form = getFormMetaData(name, org);
+        MetaData form = getMetaData(name, org);
         log.info("Form Data Fetched...");
         if(form !=null) throw new FormDataException("Form Name already used!!");
     }
 
-    @Cacheable(cacheNames = "forms", key = "#orgId")
-    public List<Form> getFormsByOrg(String orgId){
-        List<Form> formByOrg = fRepo.findAllByorgId(orgId);
-        if(formByOrg.isEmpty()) throw new FormDataException("No Forms Exists!!");
-        return formByOrg;
+    @Cacheable(cacheNames = "formsOrFiles", key = "#orgId" + "-" + "#type")
+    public List<MetaData> getFormsOrFilesByOrg(String orgId,String type){
+        List<MetaData> formOrFileByOrg = fRepo.findAllByorgId(orgId,type);
+        if(formOrFileByOrg.isEmpty()) throw new FormDataException("No Forms or file Exists!!");
+        return formOrFileByOrg;
     }
 
 }

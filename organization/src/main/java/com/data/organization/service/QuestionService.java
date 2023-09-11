@@ -24,21 +24,21 @@ public class QuestionService {
     private QuestionRepo qRepo;
 
     @Transactional
-    public void saveQuestion(List<QuestionDTO> questions, String fid) {
+    public void saveQuestion(List<QuestionDTO> questions, String mId) {
         List<Question> questionData = questions.parallelStream()
-                .map(question -> new Question(question.getQname(), question.getQlabel(), question.getQtype(), fid))
+                .map(question -> new Question(question.getQname(), question.getQlabel(), question.getQtype(), mId))
                 .collect(Collectors.toList());
-        log.info("Questions list created");
+        log.info("Questions object created");
         qRepo.saveAll(questionData);
         log.info("questions saved");
     }
 
     @Transactional
-    public void updateQuestions(List<Question> questionData, String fid) throws Exception {
-        List<Question> formQuestions = getAllQuestions(fid);
+    public void updateQuestions(List<Question> questionData, String mId) throws Exception {
+        List<Question> formQuestions = getAllQuestions(mId);
         for (Question newData : questionData) {
             formQuestions.parallelStream()
-                    .filter(existingQuestion -> existingQuestion.getQid().equals(newData.getQid()))
+                    .filter(existingQuestion -> existingQuestion.getQId().equals(newData.getQId()))
                     .findFirst()
                     .ifPresent(existingQuestion -> {
                         existingQuestion.setQname(newData.getQname());
@@ -50,25 +50,24 @@ public class QuestionService {
     }
 
     @Transactional
-    public void deleteQuestionsByIds(List<String> qids){
+    public void deleteQuestionsByIds(List<String> qids) {
         qRepo.deleteAllById(qids);
     }
 
-    public void deleteByFormId(String fid)throws Exception {
-        if(fid == null) throw new FormDataException("Form not found!!!");
-        qRepo.deleteAllByFid(fid);
+    public void deleteByFormId(String mId) throws Exception {
+        qRepo.deleteAllByMId(mId);
     }
 
-    public List<QuestionDTO> getQuestionByForm(String fid) throws Exception {
-        return getAllQuestions(fid).parallelStream()
-                .map(question -> new QuestionDTO(question.getQid(), question.getQname(), question.getQtype(),
+    public List<QuestionDTO> getQuestionByForm(String mId) throws Exception {
+        return getAllQuestions(mId).parallelStream()
+                .map(question -> new QuestionDTO(question.getQId(), question.getQname(), question.getQtype(),
                         question.getQlabel()))
                 .collect(Collectors.toList());
     }
 
-    @Cacheable(value = "questions", key = "#fid")
-    private List<Question> getAllQuestions(String fid) throws Exception {
-        List<Question> questions = qRepo.findAllByFid(fid);
+    @Cacheable(value = "questions", key = "#mId")
+    private List<Question> getAllQuestions(String mId) throws Exception {
+        List<Question> questions = qRepo.findAllByMId(mId);
         if (questions.isEmpty())
             throw new FormDataException("No Questions found!!!. Seems an alteration in Form Data");
         return questions;

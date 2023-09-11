@@ -5,23 +5,21 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 
 @Data
 @Document
-@EqualsAndHashCode(exclude = "qid")
 public class Question {
     @Id
-    private String qid;
+    private String questionId;
     private String qname;
     private String qlabel;
     private String qtype;
-    private String fid;
-    public Question( String qname, String qlabel, String qtype, String fid) {
+    private String metaDataId;
+    public Question( String qname, String qlabel, String qtype, String metaDataId) {
         this.qname = qname;
         this.qlabel = qlabel;
         this.qtype = qtype;
-        this.fid = fid;
+        this.metaDataId = metaDataId;
     }
 }

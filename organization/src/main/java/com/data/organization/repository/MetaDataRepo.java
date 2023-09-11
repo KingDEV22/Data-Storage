@@ -6,16 +6,16 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import com.data.organization.model.Form;
+import com.data.organization.model.MetaData;
 
-public interface FormRepo extends MongoRepository<Form, String> {
-    @Query("{'orgId': ?0}")
-    List<Form> findAllByorgId(String orgId);
+public interface MetaDataRepo extends MongoRepository<MetaData, String> {
+    @Query("{'orgId': ?0, 'type' : ?1}")
+    List<MetaData> findAllByorgId(String orgId, String type);
 
     @Query("{'name' : ?0, 'orgId' : ?1}")
-    Optional<Form> findByNameAndOrgId(String name, String orgId);
+    Optional<MetaData> findByNameAndOrgId(String name, String orgId);
 
-    Optional<Form> findByLink(String link);
+    Optional<MetaData> findByLink(String link);
 
     boolean existsByName(String name);
 

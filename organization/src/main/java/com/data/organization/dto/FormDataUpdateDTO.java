@@ -14,5 +14,5 @@ import lombok.NoArgsConstructor;
 public class FormDataUpdateDTO {
     private List<Question> questions;
     private String formName;
-    private String oldName;
+    private String newFormName;
 }

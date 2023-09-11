@@ -1,9 +1,8 @@
 package com.data.organization.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,12 +11,16 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.data.organization.dto.FormDataUpdateDTO;
 import com.data.organization.dto.FormDeleteDTO;
 import com.data.organization.dto.FormRequest;
+import com.data.organization.dto.ResponseMessage;
 import com.data.organization.service.FormService;
+import com.data.organization.service.RecordService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,17 +28,35 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping(value = "/org", produces = "application/json")
 @CrossOrigin(origins = "*")
 @Slf4j
-public class FormController {
+public class DataController {
 
     @Autowired
     private FormService formService;
 
+    @Autowired
+    private RecordService rService;
+    private final String FILE_FORMAT = "text/csv";
+
     @PostMapping("/form")
-    public ResponseEntity<?> getFormLink(@RequestBody FormRequest fRequest) {
+    public ResponseEntity<ResponseMessage> getFormLink(@RequestBody FormRequest fRequest) {
         try {
-            return ResponseEntity.ok().body(formService.saveFormMetaData(fRequest));
+            return ResponseEntity.ok().body(
+                    new ResponseMessage(formService.saveFormMetaData(fRequest.getFormName(), fRequest.getQuestions())));
         } catch (Exception e) {
             log.error("error", e);
+            return ResponseEntity.badRequest().body(new ResponseMessage(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/data")
+    public ResponseEntity<?> storeFileData(@RequestParam("file") MultipartFile file) {
+        try {
+            if (!file.getContentType().equals(FILE_FORMAT)) {
+                return ResponseEntity.badRequest().body("File format not supported...");
+            }
+            rService.storeFileData(file);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -63,7 +84,7 @@ public class FormController {
     @PutMapping("/form/name")
     public ResponseEntity<?> updateFormName(@RequestBody FormDataUpdateDTO formRequest) {
         try {
-            formService.updateFormName(formRequest.getFormName(), formRequest.getOldName());
+            formService.updateFormName(formRequest.getNewFormName(), formRequest.getFormName());
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error("error", e);
@@ -72,6 +93,7 @@ public class FormController {
     }
 
     @DeleteMapping("/form/name")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<?> deleteForm(@RequestBody FormDeleteDTO formRequest) {
         try {
             formService.deleteForm(formRequest.getFormName());
@@ -85,7 +107,7 @@ public class FormController {
     @PutMapping("/form/question")
     public ResponseEntity<?> updateFormQuestions(@RequestBody FormDataUpdateDTO formRequest) {
         try {
-            formService.updateFormQuestions(formRequest.getQuestions(), formRequest.getFormName());
+            formService.updateFormQuestions(formRequest);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error("error", e);
@@ -96,7 +118,7 @@ public class FormController {
     @DeleteMapping("/form/question")
     public ResponseEntity<?> deteleFormQuestions(@RequestBody FormDeleteDTO formRequest) {
         try {
-            formService.deteleFormQuestions(formRequest.getQuestionIds());
+            formService.deleteFormQuestions(formRequest.getQuestionIds());
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error("error", e);

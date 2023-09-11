@@ -12,5 +12,4 @@ import lombok.NoArgsConstructor;
 public class FormRequest {
     private List<QuestionDTO> questions;
     private String formName;
-    private String country;
 }
