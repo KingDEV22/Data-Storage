@@ -7,18 +7,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-import javax.management.AttributeNotFoundException;
-
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.data.organization.dto.FormDataRequest;
 import com.data.organization.model.DataRecord;
 import com.data.organization.model.MetaData;
+import com.data.organization.model.OrgUser;
 import com.data.organization.repository.DataRecordRepo;
+import com.data.organization.repository.MetaDataRepo;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 
@@ -28,7 +27,13 @@ public class RecordService {
     @Autowired
     private DataRecordRepo dataRecordRepo;
 
-    public List<DataRecord> parseCsvFile(InputStream csvFile) throws IOException {
+    @Autowired
+    private MetaDataRepo mDataRepo;
+
+    @Autowired
+    private FormUtilService formUtilService;
+
+    public List<DataRecord> parseCsvFile(InputStream csvFile, String metaDataId) throws IOException {
         List<DataRecord> csvDataList = new ArrayList<>();
 
         try (CSVReader csvReader = new CSVReader(new InputStreamReader(csvFile))) {
@@ -49,6 +54,7 @@ public class RecordService {
                 }
 
                 dataRecord.setData(data);
+                dataRecord.setMetaDataId(metaDataId);
                 csvDataList.add(dataRecord);
             }
         } catch (CsvValidationException e) {
@@ -59,32 +65,47 @@ public class RecordService {
         return csvDataList;
     }
 
-    public void storeFileData(MultipartFile file) {
+    public void storeFileData(MultipartFile file, String fileName) {
+        OrgUser user = formUtilService.getOrgUser();
+        MetaData fileData = new MetaData();
+        fileData.setName(fileName);
+        fileData.setType("File");
+        fileData.setOrgId(user.getOrgId());
+        mDataRepo.save(fileData);
         try {
-            List<DataRecord> data = parseCsvFile(file.getInputStream());
-            System.out.println(data);
-            dataRecordRepo.saveAll(data);
+            List<DataRecord> data = parseCsvFile(file.getInputStream(), fileData.getMetaDataId());
 
+            dataRecordRepo.saveAll(data);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
     }
 
+    public List<Map<String, Object>> getFileData(String fileName) {
+        OrgUser user = formUtilService.getOrgUser();
+        MetaData fileDataByName = formUtilService.getMetaData(fileName, user.getOrgId());
+        List<DataRecord> fileData = dataRecordRepo.findAllByMetaDataId(fileDataByName.getMetaDataId());
+        List<Map<String, Object>> dataList = fileData.parallelStream()
+                .map(DataRecord::getData)
+                .collect(Collectors.toList());
+        return dataList;
+    }
+
     // @RabbitListener(queues = MessagingConfig.QUEUE)
     // public void consumeMessageFromQueue(FormDataRequest formDataRequest) {
-    //     log.info(formDataRequest.toString());
-    //     try {
-    //         if (formDataRequest.getUrl().equals(null)) {
-    //             throw new AttributeNotFoundException("Url is not found");
-    //         }
-    //         MetaData formByLink = fUtilService.getFormMetaDataByLink(formDataRequest.getUrl());
-    //         log.info("form found!!");
-    //         saveAnswer(formDataRequest.getQa(), formByLink.getFId());
-    //     } catch (Exception e) {
-    //         log.error(e.getMessage());
-    //     }
+    // log.info(formDataRequest.toString());
+    // try {
+    // if (formDataRequest.getUrl().equals(null)) {
+    // throw new AttributeNotFoundException("Url is not found");
+    // }
+    // MetaData formByLink =
+    // fUtilService.getFormMetaDataByLink(formDataRequest.getUrl());
+    // log.info("form found!!");
+    // saveAnswer(formDataRequest.getQa(), formByLink.getFId());
+    // } catch (Exception e) {
+    // log.error(e.getMessage());
+    // }
 
     // }
 }

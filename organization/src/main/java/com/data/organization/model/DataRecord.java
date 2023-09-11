@@ -22,7 +22,5 @@ public class DataRecord {
     public DataRecord(String metaDataId, Map<String, Object> data) {
         this.metaDataId = metaDataId;
         this.data = data;
-    }
-
-    
+    }   
 }

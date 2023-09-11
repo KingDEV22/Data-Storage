@@ -24,9 +24,10 @@ public class QuestionService {
     private QuestionRepo qRepo;
 
     @Transactional
-    public void saveQuestion(List<QuestionDTO> questions, String mId) {
+    public void saveQuestion(List<QuestionDTO> questions, String metaDataId) {
         List<Question> questionData = questions.parallelStream()
-                .map(question -> new Question(question.getQname(), question.getQlabel(), question.getQtype(), mId))
+                .map(question -> new Question(question.getQname(), question.getQlabel(), question.getQtype(),
+                        metaDataId))
                 .collect(Collectors.toList());
         log.info("Questions object created");
         qRepo.saveAll(questionData);
@@ -34,11 +35,11 @@ public class QuestionService {
     }
 
     @Transactional
-    public void updateQuestions(List<Question> questionData, String mId) throws Exception {
-        List<Question> formQuestions = getAllQuestions(mId);
+    public void updateQuestions(List<Question> questionData, String metaDataId) throws Exception {
+        List<Question> formQuestions = getAllQuestions(metaDataId);
         for (Question newData : questionData) {
             formQuestions.parallelStream()
-                    .filter(existingQuestion -> existingQuestion.getQId().equals(newData.getQId()))
+                    .filter(existingQuestion -> existingQuestion.getQuestionId().equals(newData.getQuestionId()))
                     .findFirst()
                     .ifPresent(existingQuestion -> {
                         existingQuestion.setQname(newData.getQname());
@@ -54,20 +55,20 @@ public class QuestionService {
         qRepo.deleteAllById(qids);
     }
 
-    public void deleteByFormId(String mId) throws Exception {
-        qRepo.deleteAllByMId(mId);
+    public void deleteByFormId(String metaDataId) throws Exception {
+        qRepo.deleteAllByMetaDataId(metaDataId);
     }
 
-    public List<QuestionDTO> getQuestionByForm(String mId) throws Exception {
-        return getAllQuestions(mId).parallelStream()
-                .map(question -> new QuestionDTO(question.getQId(), question.getQname(), question.getQtype(),
+    public List<QuestionDTO> getQuestionByForm(String metaDataId) throws Exception {
+        return getAllQuestions(metaDataId).parallelStream()
+                .map(question -> new QuestionDTO(question.getQuestionId(), question.getQname(), question.getQtype(),
                         question.getQlabel()))
                 .collect(Collectors.toList());
     }
 
-    @Cacheable(value = "questions", key = "#mId")
-    private List<Question> getAllQuestions(String mId) throws Exception {
-        List<Question> questions = qRepo.findAllByMId(mId);
+    @Cacheable(value = "questions", key = "#metaDataId")
+    private List<Question> getAllQuestions(String metaDataId) throws Exception {
+        List<Question> questions = qRepo.findAllByMetaDataId(metaDataId);
         if (questions.isEmpty())
             throw new FormDataException("No Questions found!!!. Seems an alteration in Form Data");
         return questions;

@@ -6,6 +6,7 @@ import javax.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,11 @@ public class FormUtilService {
 
     @Autowired
     private MetaDataRepo fRepo;
+
+    public OrgUser getOrgUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return getOrgUser(email);
+    }
 
     @Cacheable(cacheNames = "metaData", key = "#name + '-' + #orgId")
     public MetaData getMetaData(String name, String orgId) {    
@@ -49,9 +55,9 @@ public class FormUtilService {
         if(form !=null) throw new FormDataException("Form Name already used!!");
     }
 
-    @Cacheable(cacheNames = "formsOrFiles", key = "#orgId" + "-" + "#type")
+    @Cacheable(cacheNames = "formsOrFiles", key = "#orgId + '-' + #type")
     public List<MetaData> getFormsOrFilesByOrg(String orgId,String type){
-        List<MetaData> formOrFileByOrg = fRepo.findAllByorgId(orgId,type);
+        List<MetaData> formOrFileByOrg = fRepo.findAllByorgIdAndType(orgId,type);
         if(formOrFileByOrg.isEmpty()) throw new FormDataException("No Forms or file Exists!!");
         return formOrFileByOrg;
     }

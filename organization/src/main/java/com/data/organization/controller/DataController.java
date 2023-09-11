@@ -2,7 +2,6 @@ package com.data.organization.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,13 +48,23 @@ public class DataController {
     }
 
     @PostMapping("/data")
-    public ResponseEntity<?> storeFileData(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> storeFileData(@RequestParam("file") MultipartFile file, @RequestParam("name") String fileName) {
         try {
             if (!file.getContentType().equals(FILE_FORMAT)) {
                 return ResponseEntity.badRequest().body("File format not supported...");
             }
-            rService.storeFileData(file);
+            rService.storeFileData(file,fileName);
             return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/data")
+    public ResponseEntity<?> getFileData(@RequestHeader("name") String fileName) {
+        try {
+            
+            return ResponseEntity.ok().body(rService.getFileData(fileName));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -93,7 +102,6 @@ public class DataController {
     }
 
     @DeleteMapping("/form/name")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<?> deleteForm(@RequestBody FormDeleteDTO formRequest) {
         try {
             formService.deleteForm(formRequest.getFormName());

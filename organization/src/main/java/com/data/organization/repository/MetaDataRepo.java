@@ -10,7 +10,7 @@ import com.data.organization.model.MetaData;
 
 public interface MetaDataRepo extends MongoRepository<MetaData, String> {
     @Query("{'orgId': ?0, 'type' : ?1}")
-    List<MetaData> findAllByorgId(String orgId, String type);
+    List<MetaData> findAllByorgIdAndType(String orgId, String type);
 
     @Query("{'name' : ?0, 'orgId' : ?1}")
     Optional<MetaData> findByNameAndOrgId(String name, String orgId);

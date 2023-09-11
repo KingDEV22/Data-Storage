@@ -8,12 +8,12 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import com.data.organization.model.Question;
 
 public interface QuestionRepo extends MongoRepository<Question, String> {
-    @Query("{'mId': ?0}")
-    List<Question> findAllByMId(String mId);
+    @Query("{'metaDataId': ?0}")
+    List<Question> findAllByMetaDataId(String metaDataId);
 
-    @Query("{'qId' : ?0 , 'fId' : ?1}")
-    Question findByQIdAndMId(String qId, String mId);
-    @Query("{'mId': ?0}")
-    void deleteAllByMId(String mId);
+    @Query("{'questionId' : ?0 , 'metaDataId' : ?1}")
+    Question findByQuestionIdAndMetaDataId(String questionId, String metaDataId);
+    @Query("{'metaDataId': ?0}")
+    void deleteAllByMetaDataId(String metaDataId);
 
 }

@@ -7,7 +7,6 @@ import javax.transaction.Transactional;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CachePut;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.data.organization.dto.FormDataUpdateDTO;
@@ -30,18 +29,20 @@ public class FormService {
     private QuestionService qService;
     private MetaDataRepo fRepo;
 
-    private OrgUser getOrgUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return fUtilService.getOrgUser(email);
+    
+
+    private String createFormLink(String formName, String orgName) {
+        String link = "http://localhost:4000/form?name=" + formName.replaceAll("\\s+", "") + "-"
+                + orgName.replaceAll("\\s+", "");
+        return link;
     }
 
     public String saveFormMetaData(String formName, List<QuestionDTO> questions) throws Exception {
-        OrgUser orgUser = getOrgUser();
+        OrgUser orgUser = fUtilService.getOrgUser();
         log.info("org User found!!!");
         fUtilService.checkForm(formName, orgUser.getOrgId());
         log.info("New Form object initiated");
-        String formLink = "http://localhost:4000/" + "form?name=" + formName + "-"
-                + orgUser.getName().replaceAll("\\s+", "");
+        String formLink = createFormLink(formName, orgUser.getName());
         log.info(formLink);
         try {
             String fId = storeFormData(formLink, formName, orgUser.getOrgId());
@@ -67,7 +68,7 @@ public class FormService {
     }
 
     public List<FormMetaDataResponse> getAllFormByOrg() throws Exception {
-        OrgUser orgUser = getOrgUser();
+        OrgUser orgUser = fUtilService.getOrgUser();
         log.info("org User found!!!");
         List<MetaData> formByOrg = fUtilService.getFormsOrFilesByOrg(orgUser.getOrgId(), "form");
         return formByOrg.parallelStream()
@@ -77,7 +78,7 @@ public class FormService {
     }
 
     public FormMetaDataResponse getFormByName(String name) {
-        OrgUser orgUser = getOrgUser();
+        OrgUser orgUser = fUtilService.getOrgUser();
         log.info("org User found!!!");
         try {
             MetaData formByName = fUtilService.getMetaData(name, orgUser.getOrgId());
@@ -92,18 +93,20 @@ public class FormService {
     }
 
     public List<QuestionDTO> getFormQuestions(String name) throws Exception {
-        OrgUser orgUser = getOrgUser();
+        OrgUser orgUser = fUtilService.getOrgUser();
         log.info("org User found!!!");
         MetaData formByName = fUtilService.getMetaData(name, orgUser.getOrgId());
         return qService.getQuestionByForm(formByName.getMetaDataId());
     }
 
     public void updateFormName(String newName, String oldName) {
-        OrgUser orgUser = getOrgUser();
+        OrgUser orgUser = fUtilService.getOrgUser();
         log.info("org User found!!!");
         try {
             MetaData formByName = fUtilService.getMetaData(oldName, orgUser.getOrgId());
+            String link = createFormLink(newName, orgUser.getName());
             formByName.setName(newName);
+            formByName.setLink(link);
             fRepo.save(formByName);
         } catch (Exception e) {
             log.error("Error", e);
@@ -112,7 +115,7 @@ public class FormService {
     }
 
     public void updateFormQuestions(FormDataUpdateDTO fUpdateDTO) throws Exception {
-        OrgUser orgUser = getOrgUser();
+        OrgUser orgUser = fUtilService.getOrgUser();
         log.info("org User found!!!");
         MetaData formByName = fUtilService.getMetaData(fUpdateDTO.getFormName(), orgUser.getOrgId());
         if (formByName == null) {
@@ -133,7 +136,7 @@ public class FormService {
     }
 
     public void deleteForm(String formName) throws Exception {
-        OrgUser orgUser = getOrgUser();
+        OrgUser orgUser = fUtilService.getOrgUser();
         log.info("org User found!!!");
         MetaData formByName = fUtilService.getMetaData(formName, orgUser.getOrgId());
         if (formByName.getMetaDataId() == null)
