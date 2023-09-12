@@ -8,6 +8,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import com.data.organization.model.DataRecord;
 
 public interface DataRecordRepo extends MongoRepository<DataRecord , String> {
-     @Query("{'metaDataId': ?0}")
+    @Query("{'metaDataId': ?0}")
     List<DataRecord> findAllByMetaDataId(String metaDataId);
 }

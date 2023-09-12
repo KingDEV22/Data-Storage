@@ -28,14 +28,14 @@ public class FormUtilService {
     @Autowired
     private MetaDataRepo fRepo;
 
-    public OrgUser getOrgUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return getOrgUser(email);
+    public String getContextEmail() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
-    @Cacheable(cacheNames = "metaData", key = "#name + '-' + #orgId")
-    public MetaData getMetaData(String name, String orgId) {    
-        return fRepo.findByNameAndOrgId(name, orgId).orElse(null);
+    @Cacheable(cacheNames = "metaData", key = "#name + '-' + #type")
+    public MetaData getMetaData(String name, String type) {
+        OrgUser user = getOrgUser(getContextEmail());
+        return fRepo.findByNameAndOrgIdAndType(name, user.getOrgId(), type).orElse(null);
     }
 
     @Cacheable(value = "users", key = "#email")
@@ -49,16 +49,19 @@ public class FormUtilService {
         return fRepo.findByLink(link).orElseThrow(() -> new EntityNotFoundException("Form not found!!!"));
     }
 
-    public void checkForm(String name, String org){
-        MetaData form = getMetaData(name, org);
+    public void checkForm(String name, String type) {
+        MetaData form = getMetaData(name, type);
         log.info("Form Data Fetched...");
-        if(form !=null) throw new FormDataException("Form Name already used!!");
+        if (form != null)
+            throw new FormDataException("Form Name already used!!");
     }
 
-    @Cacheable(cacheNames = "formsOrFiles", key = "#orgId + '-' + #type")
-    public List<MetaData> getFormsOrFilesByOrg(String orgId,String type){
-        List<MetaData> formOrFileByOrg = fRepo.findAllByorgIdAndType(orgId,type);
-        if(formOrFileByOrg.isEmpty()) throw new FormDataException("No Forms or file Exists!!");
+    @Cacheable(cacheNames = "formsOrFiles", key = "#type")
+    public List<MetaData> getFormsOrFilesByOrg(String type) {
+        OrgUser user = getOrgUser(getContextEmail());
+        List<MetaData> formOrFileByOrg = fRepo.findAllByorgIdAndType(user.getOrgId(), type);
+        if (formOrFileByOrg.isEmpty())
+            throw new FormDataException("No Forms or file Exists!!");
         return formOrFileByOrg;
     }
 

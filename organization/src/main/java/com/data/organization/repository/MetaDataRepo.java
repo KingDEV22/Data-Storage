@@ -12,8 +12,8 @@ public interface MetaDataRepo extends MongoRepository<MetaData, String> {
     @Query("{'orgId': ?0, 'type' : ?1}")
     List<MetaData> findAllByorgIdAndType(String orgId, String type);
 
-    @Query("{'name' : ?0, 'orgId' : ?1}")
-    Optional<MetaData> findByNameAndOrgId(String name, String orgId);
+    @Query("{'name' : ?0, 'orgId' : ?1, 'type' : ?2}")
+    Optional<MetaData> findByNameAndOrgIdAndType(String name, String orgId, String type);
 
     Optional<MetaData> findByLink(String link);
 
