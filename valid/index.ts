@@ -20,20 +20,8 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
 
-interface answerData {
-  name: String;
-  value: String;
-  type: String;
-  label: String;
-}
 let questionsData: any = "";
 let url: String;
-const answerSchema = Joi.object({
-  name: Joi.string().min(3).required(),
-  value: Joi.string().min(1).required(),
-  label: Joi.string().min(5).required(),
-  type: Joi.string().min(3).required(),
-});
 establishConnection();
 
 
@@ -50,13 +38,15 @@ app.get("/form", async (req: Request, res: Response) => {
       message: "QUESTIONS",
       url: url,
     };
+   
     sendToQueue(data);
+    logger.info("Request for form data sent")
     questionsData = await recieveFromQueue();
     const formData = {
       name: questionsData.name,
       data: questionsData.data,
     };
-    console.log(formData);
+    logger.info("form Data recieved.")
     res.render("form", { formData });
   } catch (error) {
     logger.error("", error);
@@ -65,10 +55,8 @@ app.get("/form", async (req: Request, res: Response) => {
 });
 
 app.post("/validate", async (req: Request, res: Response) => {
-  const answerData: Object = req.body;
-  console.log(req.url);
-  // const url = (req.body.url as string)?.replace("/?", "?");
   try {
+    const answerData: Object = req.body;
     logger.info("Data validated!!!");
     const data = {
       formData: answerData,

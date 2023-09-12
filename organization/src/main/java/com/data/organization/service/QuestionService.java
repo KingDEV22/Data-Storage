@@ -3,14 +3,13 @@ package com.data.organization.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.transaction.Transactional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.data.organization.dto.QuestionDTO;
-import com.data.organization.exception.FormDataException;
+import com.data.organization.exception.MetaDataException;
 import com.data.organization.model.Question;
 import com.data.organization.repository.QuestionRepo;
 
@@ -24,7 +23,7 @@ public class QuestionService {
     private QuestionRepo qRepo;
 
     @Transactional
-    public void saveQuestion(List<QuestionDTO> questions, String metaDataId) {
+    public void saveQuestion(List<QuestionDTO> questions, String metaDataId) throws Exception {
         List<Question> questionData = questions.parallelStream()
                 .map(question -> new Question(question.getQname(), question.getQlabel(), question.getQtype(),
                         metaDataId))
@@ -51,7 +50,7 @@ public class QuestionService {
     }
 
     @Transactional
-    public void deleteQuestionsByIds(List<String> qids) {
+    public void deleteQuestionsByIds(List<String> qids) throws Exception {
         qRepo.deleteAllById(qids);
     }
 
@@ -70,7 +69,7 @@ public class QuestionService {
     private List<Question> getAllQuestions(String metaDataId) throws Exception {
         List<Question> questions = qRepo.findAllByMetaDataId(metaDataId);
         if (questions.isEmpty())
-            throw new FormDataException("No Questions found!!!. Seems an alteration in Form Data");
+            throw new MetaDataException("No Questions found!!!. Seems an alteration in Form Data");
         return questions;
 
     }

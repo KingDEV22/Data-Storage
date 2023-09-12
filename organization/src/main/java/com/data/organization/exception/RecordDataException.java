@@ -1,9 +1,9 @@
 package com.data.organization.exception;
 
-public class FormDataException extends RuntimeException {
+public class RecordDataException extends RuntimeException {
     private String message;
 
-    public FormDataException(String message) {
+    public RecordDataException(String message) {
         this.message = message;
     }
 

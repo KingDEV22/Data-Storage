@@ -1,7 +1,9 @@
 package com.data.organization.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,27 +18,26 @@ import com.data.organization.dto.FormDataUpdateDTO;
 import com.data.organization.dto.FormDeleteDTO;
 import com.data.organization.dto.FormRequest;
 import com.data.organization.dto.ResponseMessage;
+import com.data.organization.exception.MetaDataException;
 import com.data.organization.service.FormService;
-
-import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping(value = "/org", produces = "application/json")
 @CrossOrigin(origins = "*")
-@Slf4j
 public class FormController {
 
     @Autowired
     private FormService formService;
 
     @PostMapping("/form")
-    public ResponseEntity<ResponseMessage> getFormLink(@RequestBody FormRequest fRequest) {
+    public ResponseEntity<?> getFormLink(@RequestBody FormRequest fRequest) {
         try {
             return ResponseEntity.ok().body(
                     new ResponseMessage(formService.saveFormMetaData(fRequest.getFormName(), fRequest.getQuestions())));
-        } catch (Exception e) {
-            log.error("error", e);
+        } catch (UsernameNotFoundException e) {
             return ResponseEntity.badRequest().body(new ResponseMessage(e.getMessage()));
+        } catch (MetaDataException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseMessage(e.getMessage()));
         }
     }
 
@@ -44,9 +45,10 @@ public class FormController {
     public ResponseEntity<?> getFormByOrg() {
         try {
             return ResponseEntity.ok().body(formService.getAllFormByOrg());
-        } catch (Exception e) {
-            log.error("error", e);
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.badRequest().body(new ResponseMessage(e.getMessage()));
+        } catch (MetaDataException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseMessage(e.getMessage()));
         }
     }
 
@@ -54,9 +56,10 @@ public class FormController {
     public ResponseEntity<?> getFormByName(@RequestHeader("name") String name) {
         try {
             return ResponseEntity.ok().body(formService.getFormByName(name));
-        } catch (Exception e) {
-            log.error("error", e);
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.badRequest().body(new ResponseMessage(e.getMessage()));
+        } catch (MetaDataException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseMessage(e.getMessage()));
         }
     }
 
@@ -65,9 +68,10 @@ public class FormController {
         try {
             formService.updateFormName(formRequest.getNewFormName(), formRequest.getFormName());
             return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            log.error("error", e);
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.badRequest().body(new ResponseMessage(e.getMessage()));
+        } catch (MetaDataException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseMessage(e.getMessage()));
         }
     }
 
@@ -76,9 +80,10 @@ public class FormController {
         try {
             formService.deleteForm(formRequest.getFormName());
             return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            log.error("error", e);
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.badRequest().body(new ResponseMessage(e.getMessage()));
+        } catch (MetaDataException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseMessage(e.getMessage()));
         }
     }
 
@@ -87,9 +92,10 @@ public class FormController {
         try {
             formService.updateFormQuestions(formRequest);
             return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            log.error("error", e);
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.badRequest().body(new ResponseMessage(e.getMessage()));
+        } catch (MetaDataException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseMessage(e.getMessage()));
         }
     }
 
@@ -98,9 +104,10 @@ public class FormController {
         try {
             formService.deleteFormQuestions(formRequest.getQuestionIds());
             return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            log.error("error", e);
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.badRequest().body(new ResponseMessage(e.getMessage()));
+        } catch (MetaDataException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseMessage(e.getMessage()));
         }
     }
 
@@ -108,9 +115,10 @@ public class FormController {
     public ResponseEntity<?> getQuestionByForm(@RequestHeader("name") String name) {
         try {
             return ResponseEntity.ok().body(formService.getFormQuestions(name));
-        } catch (Exception e) {
-            log.error("error", e);
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.badRequest().body(new ResponseMessage(e.getMessage()));
+        } catch (MetaDataException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseMessage(e.getMessage()));
         }
     }
 

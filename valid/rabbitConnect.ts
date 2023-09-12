@@ -8,7 +8,7 @@ const logger = createLogger({
   rejectionHandlers: [new transports.Console({})],
 });
 
-const rabbitmqUrl = "amqp://guest:guest@localhost:5672";
+const rabbitmqUrl = "amqp://guest:guest@rabbitmq:5672";
 let connection: Connection | null = null;
 
 export const establishConnection = async () => {

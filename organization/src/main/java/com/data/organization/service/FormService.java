@@ -7,12 +7,13 @@ import javax.transaction.Transactional;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CachePut;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.data.organization.dto.FormDataUpdateDTO;
 import com.data.organization.dto.FormMetaDataResponse;
 import com.data.organization.dto.QuestionDTO;
-import com.data.organization.exception.FormDataException;
+import com.data.organization.exception.MetaDataException;
 import com.data.organization.model.DataType;
 import com.data.organization.model.MetaData;
 import com.data.organization.model.OrgUser;
@@ -36,20 +37,20 @@ public class FormService {
         return link;
     }
 
-    public String saveFormMetaData(String formName, List<QuestionDTO> questions) throws Exception {
+    public String saveFormMetaData(String formName, List<QuestionDTO> questions)
+            throws UsernameNotFoundException, MetaDataException {
         OrgUser orgUser = fUtilService.getOrgUser(fUtilService.getContextEmail());
         log.info("org User found!!!");
         fUtilService.checkForm(formName, DataType.FORM.toString());
         log.info("New Form object initiated");
         String formLink = createFormLink(formName, orgUser.getName());
-        log.info(formLink);
         try {
             String fId = storeFormData(formLink, formName, orgUser.getOrgId());
-            log.info("form data saved");
+            log.info("form data saved. Link: " + formLink);
             qService.saveQuestion(questions, fId);
         } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new FormDataException("Form Data not saved!!!!");
+            log.error("error", e);
+            throw new MetaDataException("Form Data not saved!!!!");
         }
         return formLink;
     }
@@ -66,7 +67,7 @@ public class FormService {
         return formMetaData.getMetaDataId();
     }
 
-    public List<FormMetaDataResponse> getAllFormByOrg() throws Exception {
+    public List<FormMetaDataResponse> getAllFormByOrg() throws UsernameNotFoundException, MetaDataException {
         List<MetaData> formByOrg = fUtilService.getFormsOrFilesByOrg(DataType.FORM.toString());
         return formByOrg.parallelStream()
                 .map(form -> new FormMetaDataResponse(form.getLink(), form.getName(), form.getCreateDate()))
@@ -74,67 +75,92 @@ public class FormService {
 
     }
 
-    public FormMetaDataResponse getFormByName(String name) {
+    public FormMetaDataResponse getFormByName(String name) throws UsernameNotFoundException, MetaDataException {
+        MetaData formByName = fUtilService.getMetaData(name, DataType.FORM.toString());
+        if (formByName == null) {
+            throw new MetaDataException("Form not found!!!!");
+        }
+        log.info("Form found!!!");
         try {
-            MetaData formByName = fUtilService.getMetaData(name, DataType.FORM.toString());
-            log.info("Form found!!!");
             FormMetaDataResponse formData = new FormMetaDataResponse();
             BeanUtils.copyProperties(formByName, formData);
             return formData;
         } catch (Exception e) {
-            throw new FormDataException("Error while fetching data!!!!");
+            log.error("error", e);
+            throw new MetaDataException("Error while fetching data!!!!");
         }
 
     }
 
-    public List<QuestionDTO> getFormQuestions(String name) throws Exception {
+    public List<QuestionDTO> getFormQuestions(String name) throws UsernameNotFoundException, MetaDataException {
         MetaData formByName = fUtilService.getMetaData(name, DataType.FORM.toString());
-        return qService.getQuestionByForm(formByName.getMetaDataId());
+        log.info("Form found!!!");
+        if (formByName == null) {
+            throw new MetaDataException("Form not found!!!!");
+        }
+        try {
+            return qService.getQuestionByForm(formByName.getMetaDataId());
+        } catch (Exception e) {
+           log.error("error", e);
+            throw new MetaDataException("Error while fetching data!!!!");
+        }
+        
     }
 
-    public void updateFormName(String newName, String oldName) {
+    public void updateFormName(String newName, String oldName) throws UsernameNotFoundException, MetaDataException {
+        OrgUser orgUser = fUtilService.getOrgUser(fUtilService.getContextEmail());
+        MetaData formByName = fUtilService.getMetaData(oldName, DataType.FORM.toString());
+        log.info("Form found!!!");
+        if (formByName == null) {
+            throw new MetaDataException("Form not found!!!!");
+        }
+        fUtilService.checkForm(newName, DataType.FORM.toString());
         try {
-            OrgUser orgUser = fUtilService.getOrgUser(fUtilService.getContextEmail());
-            MetaData formByName = fUtilService.getMetaData(oldName, DataType.FORM.toString());
             String link = createFormLink(newName, orgUser.getName());
             formByName.setName(newName);
             formByName.setLink(link);
             fRepo.save(formByName);
         } catch (Exception e) {
             log.error("Error", e);
-            throw new FormDataException("Error while updating formName!!!");
+            throw new MetaDataException("Error while updating formName!!!");
         }
     }
 
-    public void updateFormQuestions(FormDataUpdateDTO fUpdateDTO) throws Exception {
+    public void updateFormQuestions(FormDataUpdateDTO fUpdateDTO) throws UsernameNotFoundException, MetaDataException {
         MetaData formByName = fUtilService.getMetaData(fUpdateDTO.getFormName(), DataType.FORM.toString());
         if (formByName == null) {
-            throw new FormDataException("Form Name not found!!! Data Altered...");
+            throw new MetaDataException("Form not found!!!");
         }
         try {
             String mId = formByName.getMetaDataId();
             qService.updateQuestions(fUpdateDTO.getQuestions(), mId);
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new FormDataException("Error while updating form questions.....");
+            throw new MetaDataException("Error while updating form questions.....");
         }
     }
 
-    public void deleteFormQuestions(List<String> questionIds) {
-        qService.deleteQuestionsByIds(questionIds);
+    public void deleteFormQuestions(List<String> questionIds) throws UsernameNotFoundException, MetaDataException {
+        try {
+            qService.deleteQuestionsByIds(questionIds);
+        } catch (Exception e) {
+           log.error(e.getMessage());
+            throw new MetaDataException("Error while deleting form questions.....");
+        }
     }
 
-    public void deleteForm(String formName) throws Exception {
+    public void deleteForm(String formName) throws UsernameNotFoundException, MetaDataException {
         MetaData formByName = fUtilService.getMetaData(formName, DataType.FORM.toString());
-        if (formByName.getMetaDataId() == null)
-            throw new FormDataException("Form not found!!!");
+        if (formByName == null) {
+            throw new MetaDataException("Form not found!!!!");
+        }
         try {
             qService.deleteByFormId(formByName.getMetaDataId());
             fRepo.deleteById(formByName.getMetaDataId());
 
         } catch (Exception e) {
             log.error("Error", e);
-            throw new FormDataException("Error while deleting form !!!");
+            throw new MetaDataException("Error while deleting form !!!");
         }
 
     }

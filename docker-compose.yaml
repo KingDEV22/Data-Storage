@@ -42,7 +42,6 @@ services:
     container_name: valid-app
     depends_on:
       - rabbitmq
-      - mongodb
     ports:
       - "4000:4000"
     networks:

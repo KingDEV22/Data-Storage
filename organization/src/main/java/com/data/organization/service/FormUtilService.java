@@ -10,7 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.data.organization.exception.FormDataException;
+import com.data.organization.exception.MetaDataException;
 import com.data.organization.model.MetaData;
 import com.data.organization.model.OrgUser;
 import com.data.organization.repository.MetaDataRepo;
@@ -53,15 +53,15 @@ public class FormUtilService {
         MetaData form = getMetaData(name, type);
         log.info("Form Data Fetched...");
         if (form != null)
-            throw new FormDataException("Form Name already used!!");
+            throw new MetaDataException("Form Name already used!!");
     }
 
     @Cacheable(cacheNames = "formsOrFiles", key = "#type")
-    public List<MetaData> getFormsOrFilesByOrg(String type) {
+    public List<MetaData> getFormsOrFilesByOrg(String type) throws UsernameNotFoundException, MetaDataException {
         OrgUser user = getOrgUser(getContextEmail());
         List<MetaData> formOrFileByOrg = fRepo.findAllByorgIdAndType(user.getOrgId(), type);
         if (formOrFileByOrg.isEmpty())
-            throw new FormDataException("No Forms or file Exists!!");
+            throw new MetaDataException("No Forms or file Exists!!");
         return formOrFileByOrg;
     }
 
