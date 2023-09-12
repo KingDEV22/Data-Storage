@@ -12,12 +12,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.data.organization.configration.rabbitmq.MessagingConfig;
+import com.data.organization.dto.FormDataRequest;
+import com.data.organization.dto.FormMetaDataResponse;
+import com.data.organization.dto.QuestionDTO;
 import com.data.organization.model.DataRecord;
+import com.data.organization.model.DataType;
 import com.data.organization.model.MetaData;
 import com.data.organization.model.OrgUser;
 import com.data.organization.repository.DataRecordRepo;
@@ -26,17 +33,19 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 import com.opencsv.exceptions.CsvValidationException;
 
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
+@AllArgsConstructor
 public class RecordService {
 
-    @Autowired
     private DataRecordRepo dataRecordRepo;
-
-    @Autowired
     private MetaDataRepo mDataRepo;
-
-    @Autowired
     private FormUtilService formUtilService;
+    private RabbitTemplate rabbitTemplate;
+    private QuestionService qService;
 
     public List<DataRecord> parseCsvFile(InputStream csvFile, String metaDataId) throws IOException {
         List<DataRecord> csvDataList = new ArrayList<>();
@@ -69,6 +78,7 @@ public class RecordService {
         return csvDataList;
     }
 
+    @Transactional
     public void storeFileData(MultipartFile file, String fileName) {
         OrgUser orgUser = formUtilService.getOrgUser(formUtilService.getContextEmail());
         MetaData fileData = new MetaData();
@@ -118,7 +128,7 @@ public class RecordService {
     }
 
     public InputStreamResource getDataInCSVFormat(String name, String type) {
-        List<Map<String, Object>> dataList = getFileData(name,type);
+        List<Map<String, Object>> dataList = getFileData(name, type);
         try {
             return exportDataToCsv(dataList);
         } catch (IOException e) {
@@ -129,27 +139,84 @@ public class RecordService {
     }
 
     public List<Map<String, Object>> getFileData(String fileName, String type) {
-        List<DataRecord> fileData = getDataformDB(fileName, "File");
+        List<DataRecord> fileData = getDataformDB(fileName, DataType.FILE.toString());
         List<Map<String, Object>> dataList = fileData.parallelStream()
                 .map(DataRecord::getData)
                 .collect(Collectors.toList());
         return dataList;
     }
 
-    // @RabbitListener(queues = MessagingConfig.QUEUE)
-    // public void consumeMessageFromQueue(FormDataRequest formDataRequest) {
-    // log.info(formDataRequest.toString());
-    // try {
-    // if (formDataRequest.getUrl().equals(null)) {
-    // throw new AttributeNotFoundException("Url is not found");
-    // }
-    // MetaData formByLink =
-    // fUtilService.getFormMetaDataByLink(formDataRequest.getUrl());
-    // log.info("form found!!");
-    // saveAnswer(formDataRequest.getQa(), formByLink.getFId());
-    // } catch (Exception e) {
-    // log.error(e.getMessage());
-    // }
+    public List<FormMetaDataResponse> getAllFileMetaDataByOrg() {
+        List<MetaData> formByOrg = formUtilService.getFormsOrFilesByOrg(DataType.FILE.toString());
+        return formByOrg.parallelStream()
+                .map(form -> new FormMetaDataResponse("", form.getName(), form.getCreateDate()))
+                .collect(Collectors.toList());
+    }
 
-    // }
+    private FormDataRequest maptFormDataRequest(List<QuestionDTO> quwList) {
+        List<Map<String, Object>> questionList = new ArrayList<>();
+        String[] keys = { "questionId", "qname", "qtype", "qlabel" };
+       
+        for (QuestionDTO question : quwList) {
+             int i = 0;
+            Map<String, Object> questionMap = new HashMap<>();
+            questionMap.put(keys[i++], question.getQuestionId());
+            questionMap.put(keys[i++], question.getQname());
+            questionMap.put(keys[i++], question.getQtype());
+            questionMap.put(keys[i], question.getQlabel());
+            questionList.add(questionMap);
+        }
+        FormDataRequest formDataRequest = new FormDataRequest();
+        formDataRequest.setData(questionList);
+        return formDataRequest;
+    }
+
+    // @RabbitListener(queues = MessagingConfig.QUEUE2)
+    public void sendMessageToQueue(String link) {
+        MetaData formData = formUtilService.getFormMetaDataByLink(link);
+        try {
+            List<QuestionDTO> questionList = qService.getQuestionByForm(formData.getMetaDataId());
+            log.info(questionList.toString());
+            FormDataRequest formDataRequest = maptFormDataRequest(questionList);
+            formDataRequest.setName(formData.getName());
+            // log.info(questionListJson);
+            rabbitTemplate.convertAndSend(MessagingConfig.EXCHANGE, MessagingConfig.ROUTING_KEY, formDataRequest);
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
+
+
+    private void saveAnswerData(Map<String,Object> data, String url){
+        MetaData formData = formUtilService.getFormMetaDataByLink(url);
+        try {
+            DataRecord answersRecord = new DataRecord();
+            answersRecord.setData(data);
+            answersRecord.setMetaDataId(formData.getMetaDataId());
+            dataRecordRepo.save(answersRecord);
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+    }
+
+    @RabbitListener(queues = MessagingConfig.QUEUE1)
+    public void consumeMessageFromQueue(FormDataRequest formDataRequest) {
+        log.info(formDataRequest.toString());
+        try {
+            switch (formDataRequest.getMessage()) {
+                case "QUESTIONS":
+                    sendMessageToQueue(formDataRequest.getUrl());
+                    break;
+                case "SUBMIT":
+                    saveAnswerData(formDataRequest.getFormData(), formDataRequest.getUrl());
+                    break;
+                default:
+                    break;
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
 }

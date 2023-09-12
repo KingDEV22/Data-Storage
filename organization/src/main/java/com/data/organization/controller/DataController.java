@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.data.organization.model.DataType;
+import com.data.organization.model.FileType;
 import com.data.organization.service.RecordService;
 
 
@@ -22,13 +24,13 @@ import com.data.organization.service.RecordService;
 public class DataController {
     @Autowired
     private RecordService rService;
-    private final String FILE_FORMAT = "text/csv";
 
     @PostMapping("/data")
     public ResponseEntity<?> storeFileData(@RequestParam("file") MultipartFile file,
             @RequestParam("name") String fileName) {
+                System.out.println(file.getContentType());
         try {
-            if (!file.getContentType().equals(FILE_FORMAT)) {
+            if (!file.getContentType().equals(FileType.CSV.getType())) {
                 return ResponseEntity.badRequest().body("File format not supported...");
             }
             rService.storeFileData(file, fileName);
@@ -42,7 +44,17 @@ public class DataController {
     public ResponseEntity<?> getFileData(@RequestHeader("name") String fileName) {
         try {
 
-            return ResponseEntity.ok().body(rService.getFileData(fileName,"File"));
+            return ResponseEntity.ok().body(rService.getFileData(fileName,DataType.FILE.toString()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+     @GetMapping("/data/all")
+    public ResponseEntity<?> getAllFileMetaData() {
+        try {
+
+            return ResponseEntity.ok().body(rService.getAllFileMetaDataByOrg());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
